@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-egui = "0.29.1"
+egui = { version = "0.29.1", features = ["rayon"] }
 env_logger = "0.11.5"
 # egui-glow currently causes a crash on systems using nvidia drivers so we need to use wgpu https://github.com/emilk/egui/issues/3962
 eframe = { version = "0.29.1", features = ["wgpu"] }
