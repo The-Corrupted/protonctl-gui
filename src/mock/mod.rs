@@ -5,10 +5,12 @@ pub fn get_mocked_install_versions(number: u64) -> Vec<InstalledVersion> {
     let mut vec: Vec<InstalledVersion> = Vec::new();
     for x in 0..number {
         let mut install_type = InstallType::WINE;
-        if x % 3 == 1 {
+        if x % 4 == 1 {
             install_type = InstallType::WINE
-        } else if x % 3 == 2 {
+        } else if x % 4 == 2 {
             install_type = InstallType::PROTON
+        } else if x % 4 == 3 {
+            install_type = InstallType::UMU
         } else {
             install_type = InstallType::CUSTOM
         }

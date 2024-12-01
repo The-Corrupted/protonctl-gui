@@ -3,6 +3,7 @@ use crate::plib::fsutils::get_db_path;
 use rusqlite;
 use std::sync::Arc;
 
+#[derive(PartialEq, PartialOrd, Debug)]
 pub enum InstallType {
     WINE,
     UMU,
@@ -10,6 +11,18 @@ pub enum InstallType {
     CUSTOM,
 }
 
+impl InstallType {
+    pub fn to_str(&self) -> &str {
+        match &self {
+            InstallType::WINE => "Wine",
+            InstallType::PROTON => "Proton",
+            InstallType::UMU => "UMU",
+            InstallType::CUSTOM => "Custom",
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct InstalledVersion {
     // Name of the install. In most cases this will be the same as the version or asset name
     // We will allow the user to change this
@@ -30,6 +43,7 @@ impl InstalledVersion {
     }
 }
 
+#[derive(Debug)]
 pub struct AppDB {
     db_connection: Arc<rusqlite::Connection>,
 }

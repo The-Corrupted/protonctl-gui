@@ -1,12 +1,22 @@
 use crate::mock::get_mocked_install_versions;
-use crate::plib::db::{AppDB, InstalledVersion};
+use crate::plib::db::{AppDB, InstallType, InstalledVersion};
 use eframe;
 use egui;
+
+#[derive(PartialEq, PartialOrd)]
+enum FilterEnum {
+    PROTON,
+    WINE,
+    UMU,
+    CUSTOM,
+    ALL,
+}
 
 pub struct ProtonCtlApp {
     label: String,
     value: f64,
     entries: Vec<InstalledVersion>,
+    radio_filter: Option<InstallType>,
     db: AppDB,
 }
 
@@ -16,7 +26,7 @@ impl ProtonCtlApp {
         cc.egui_ctx.set_visuals(egui::Visuals::dark());
         let mut this: ProtonCtlApp = Default::default();
         this.db.create_db_or_do_nothing().unwrap();
-        this.entries = get_mocked_install_versions(20);
+        this.entries = get_mocked_install_versions(50);
         // this.entries = this.db.get_entries().unwrap();
         this
     }
@@ -28,9 +38,35 @@ impl Default for ProtonCtlApp {
             label: "ProtonCtl".to_owned(),
             value: 0.0,
             entries: Vec::new(),
+            radio_filter: None,
             db: AppDB::new().unwrap(),
         }
     }
+}
+
+fn render_header(ui: &mut egui::Ui) {
+    ui.heading("ProtonCtl");
+    ui.separator();
+}
+
+fn render_combobox(ui: &mut egui::Ui, radio_filter: &mut Option<InstallType>) {
+    egui::ComboBox::from_id_salt("Filter")
+        .truncate()
+        .selected_text(format!(
+            "{}",
+            if radio_filter.as_ref() == None {
+                "None"
+            } else {
+                radio_filter.as_ref().unwrap().to_str()
+            }
+        ))
+        .show_ui(ui, |ui| {
+            ui.selectable_value(radio_filter, None, "All");
+            ui.selectable_value(radio_filter, Some(InstallType::PROTON), "Proton");
+            ui.selectable_value(radio_filter, Some(InstallType::WINE), "Wine");
+            ui.selectable_value(radio_filter, Some(InstallType::UMU), "UMU");
+            ui.selectable_value(radio_filter, Some(InstallType::CUSTOM), "Custom");
+        });
 }
 
 impl eframe::App for ProtonCtlApp {
@@ -49,8 +85,8 @@ impl eframe::App for ProtonCtlApp {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let grid_width = ui.available_width() * 0.9;
-            ui.heading("ProtonCtl");
-            ui.separator();
+            render_header(ui);
+            render_combobox(ui, &mut self.radio_filter);
 
             egui::ScrollArea::vertical()
                 .hscroll(true)
@@ -66,6 +102,11 @@ impl eframe::App for ProtonCtlApp {
                                 .show(ui, |ui| {
                                     let mut delete_index: Option<usize> = None;
                                     for (index, value) in self.entries.iter_mut().enumerate() {
+                                        if let Some(install_type) = self.radio_filter.as_ref() {
+                                            if *install_type != value.install_type {
+                                                continue;
+                                            }
+                                        }
                                         if ui
                                             .add(
                                                 egui::Button::new(
